@@ -5,9 +5,13 @@ from PIL import Image
 from pdf2image import convert_from_path
 import tempfile
 import openpyxl
+import os
 
-# Configure Tesseract path (Windows)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Configure Tesseract path
+if os.name == 'nt':  # Windows
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+else:  # Linux
+    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 # Function to load Excel data
 @st.cache_data
@@ -101,7 +105,7 @@ def main():
                     st.session_state.df = pd.concat([st.session_state.df, new_data_df], ignore_index=True)
                     st.session_state.df = clean_data(st.session_state.df)
                     st.sidebar.success('Data added successfully!')
-                    st.rerun()
+                    st.experimental_rerun()
 
         if st.button('Download Updated Data'):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as updated_file:
