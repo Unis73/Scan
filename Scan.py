@@ -6,7 +6,7 @@ import tempfile
 import openpyxl
 
 # Configure Tesseract path if needed (Windows)
-tesseract_path = r"C:\Users\Dell\Downloads\tesseract-ocr-w64-setup-5.4.0.20240606.exe"
+tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 # Function to load Excel data
