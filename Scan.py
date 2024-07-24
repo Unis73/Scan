@@ -5,9 +5,8 @@ from PIL import Image
 import tempfile
 import openpyxl
 
-# Configure Tesseract path if needed (Windows)
-tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-pytesseract.pytesseract.tesseract_cmd = tesseract_path
+# Configure Tesseract path (Windows)
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Function to load Excel data
 @st.cache_data
@@ -76,6 +75,7 @@ def main():
 
         if scanned_file is not None:
             image = Image.open(scanned_file)
+            st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
 
             extracted_text = extract_text_from_image(image)
             if extracted_text:
