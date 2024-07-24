@@ -5,6 +5,9 @@ from PIL import Image
 import tempfile
 import openpyxl
 
+# Configure Tesseract path if needed (Windows)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 # Function to load Excel data
 @st.cache_data
 def load_data(file_path):
@@ -42,7 +45,7 @@ def process_extracted_text(text, df):
         return pd.DataFrame(columns=df.columns)
 
 def main():
-    st.title("Excel Data Management with OCR")
+    st.title("Excel Data Management")
 
     st.sidebar.title('Data Entry')
     uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
