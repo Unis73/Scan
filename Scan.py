@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import pytesseract
 from PIL import Image
+from pdf2image import convert_from_path
 import tempfile
 import openpyxl
 
@@ -71,13 +72,23 @@ def main():
         st.write(st.session_state.df)
 
         st.sidebar.header('Upload Scanned Document')
-        scanned_file = st.sidebar.file_uploader("Choose a scanned document", type=["png", "jpg", "jpeg"])
+        scanned_file = st.sidebar.file_uploader("Choose a scanned document (image or PDF)", type=["png", "jpg", "jpeg", "pdf"])
 
         if scanned_file is not None:
-            image = Image.open(scanned_file)
-            st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
+            extracted_text = ""
+            if scanned_file.type == "application/pdf":
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+                    temp_pdf.write(scanned_file.getbuffer())
+                    temp_pdf_path = temp_pdf.name
 
-            extracted_text = extract_text_from_image(image)
+                images = convert_from_path(temp_pdf_path)
+                for image in images:
+                    extracted_text += extract_text_from_image(image) + "\n"
+            else:
+                image = Image.open(scanned_file)
+                st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
+                extracted_text = extract_text_from_image(image)
+
             if extracted_text:
                 st.text("Extracted Text:")
                 st.write(extracted_text)
