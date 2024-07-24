@@ -6,7 +6,8 @@ import tempfile
 import openpyxl
 
 # Configure Tesseract path if needed (Windows)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\Dell\Downloads\tesseract-ocr-w64-setup-5.4.0.20240606.exe"
+tesseract_path = r"C:\Users\Dell\Downloads\tesseract-ocr-w64-setup-5.4.0.20240606.exe"
+pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 # Function to load Excel data
 @st.cache_data
@@ -25,8 +26,12 @@ def clean_data(df):
 
 # OCR function to extract text from image
 def extract_text_from_image(image):
-    text = pytesseract.image_to_string(image)
-    return text
+    try:
+        text = pytesseract.image_to_string(image)
+        return text
+    except pytesseract.TesseractNotFoundError:
+        st.error("Tesseract OCR not found. Please ensure it is installed and the path is correctly set.")
+        return ""
 
 # Function to process extracted text and map to DataFrame
 def process_extracted_text(text, df):
@@ -71,21 +76,21 @@ def main():
 
         if scanned_file is not None:
             image = Image.open(scanned_file)
-            st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
 
             extracted_text = extract_text_from_image(image)
-            st.text("Extracted Text:")
-            st.write(extracted_text)
+            if extracted_text:
+                st.text("Extracted Text:")
+                st.write(extracted_text)
 
-            new_data_df = process_extracted_text(extracted_text, st.session_state.df)
-            st.write('New Data Extracted from Scanned Document:')
-            st.write(new_data_df)
+                new_data_df = process_extracted_text(extracted_text, st.session_state.df)
+                st.write('New Data Extracted from Scanned Document:')
+                st.write(new_data_df)
 
-            if st.sidebar.button('Add Data from OCR'):
-                st.session_state.df = pd.concat([st.session_state.df, new_data_df], ignore_index=True)
-                st.session_state.df = clean_data(st.session_state.df)
-                st.sidebar.success('Data added successfully!')
-                st.experimental_rerun()
+                if st.sidebar.button('Add Data from OCR'):
+                    st.session_state.df = pd.concat([st.session_state.df, new_data_df], ignore_index=True)
+                    st.session_state.df = clean_data(st.session_state.df)
+                    st.sidebar.success('Data added successfully!')
+                    st.experimental_rerun()
 
         if st.button('Download Updated Data'):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as updated_file:
