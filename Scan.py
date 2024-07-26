@@ -112,7 +112,6 @@ def main():
                 extracted_text = extract_text_from_pdf(temp_pdf_path)
             else:
                 image = Image.open(scanned_file)
-                st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
                 extracted_text = extract_text_from_image(image)
 
             if extracted_text:
