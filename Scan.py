@@ -53,10 +53,18 @@ def map_data_to_columns(extracted_text, df_columns):
     for line in lines:
         if line.strip():
             values = line.split(',')
-            for i, col in enumerate(df_columns):
-                if i < len(values):
+            # Ensure the number of values matches the number of columns
+            if len(values) == len(df_columns):
+                for i, col in enumerate(df_columns):
                     data_dict[col].append(values[i].strip())
     
+    # Check if all lists in data_dict have the same length
+    max_length = len(next(iter(data_dict.values()), []))
+    for key in data_dict:
+        if len(data_dict[key]) != max_length:
+            st.error("Mismatch in data length while creating DataFrame.")
+            return pd.DataFrame(columns=df_columns)
+
     new_data_df = pd.DataFrame(data_dict)
     return new_data_df
 
@@ -104,6 +112,7 @@ def main():
                 extracted_text = extract_text_from_pdf(temp_pdf_path)
             else:
                 image = Image.open(scanned_file)
+                st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
                 extracted_text = extract_text_from_image(image)
 
             if extracted_text:
