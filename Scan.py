@@ -37,29 +37,37 @@ def extract_text_from_image(image):
         st.error("Tesseract OCR not found. Please ensure it is installed and the path is correctly set.")
         return ""
 
-# Function to process extracted text and match with DataFrame
-def process_extracted_text(text, df):
-    rows = text.split('\n')
-    new_data = []
-    for row in rows:
-        if row.strip():
-            values = row.split(',')
-            if len(values) == len(df.columns):
-                new_data.append(values)
+# Function to extract text from PDF
+def extract_text_from_pdf(pdf_path):
+    text = ""
+    images = convert_from_path(pdf_path)
+    for image in images:
+        text += extract_text_from_image(image) + "\n"
+    return text
+
+# Function to map extracted data to DataFrame columns
+def map_data_to_columns(extracted_text, df_columns):
+    lines = extracted_text.split('\n')
+    data_dict = {col: [] for col in df_columns}
     
-    if new_data:
-        new_df = pd.DataFrame(new_data, columns=df.columns)
-        return new_df
-    else:
-        return pd.DataFrame(columns=df.columns)
+    for line in lines:
+        if line.strip():
+            values = line.split(',')
+            for i, col in enumerate(df_columns):
+                if i < len(values):
+                    data_dict[col].append(values[i].strip())
+    
+    new_data_df = pd.DataFrame(data_dict)
+    return new_data_df
 
 def match_and_fill_data(extracted_df, original_df):
-    # Example matching logic: assuming the first column is a unique identifier
-    # Adjust according to your specific matching logic
+    # Example matching logic: Assuming the first column is a unique identifier
     for index, row in extracted_df.iterrows():
         unique_id = row[original_df.columns[0]]
         if unique_id in original_df[original_df.columns[0]].values:
             original_df.loc[original_df[original_df.columns[0]] == unique_id] = row
+        else:
+            original_df = original_df.append(row, ignore_index=True)
     return original_df
 
 def main():
@@ -93,10 +101,7 @@ def main():
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
                     temp_pdf.write(scanned_file.getbuffer())
                     temp_pdf_path = temp_pdf.name
-
-                images = convert_from_path(temp_pdf_path)
-                for image in images:
-                    extracted_text += extract_text_from_image(image) + "\n"
+                extracted_text = extract_text_from_pdf(temp_pdf_path)
             else:
                 image = Image.open(scanned_file)
                 extracted_text = extract_text_from_image(image)
@@ -105,7 +110,7 @@ def main():
                 st.text("Extracted Text:")
                 st.write(extracted_text)
 
-                new_data_df = process_extracted_text(extracted_text, st.session_state.df)
+                new_data_df = map_data_to_columns(extracted_text, st.session_state.df.columns)
                 st.write('New Data Extracted from Scanned Document:')
                 st.write(new_data_df)
 
