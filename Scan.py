@@ -37,7 +37,7 @@ def extract_text_from_image(image):
         st.error("Tesseract OCR not found. Please ensure it is installed and the path is correctly set.")
         return ""
 
-# Function to process extracted text and map to DataFrame
+# Function to process extracted text and match with DataFrame
 def process_extracted_text(text, df):
     rows = text.split('\n')
     new_data = []
@@ -52,6 +52,15 @@ def process_extracted_text(text, df):
         return new_df
     else:
         return pd.DataFrame(columns=df.columns)
+
+def match_and_fill_data(extracted_df, original_df):
+    # Example matching logic: assuming the first column is a unique identifier
+    # Adjust according to your specific matching logic
+    for index, row in extracted_df.iterrows():
+        unique_id = row[original_df.columns[0]]
+        if unique_id in original_df[original_df.columns[0]].values:
+            original_df.loc[original_df[original_df.columns[0]] == unique_id] = row
+    return original_df
 
 def main():
     st.title("Excel Data Management")
@@ -90,6 +99,7 @@ def main():
                     extracted_text += extract_text_from_image(image) + "\n"
             else:
                 image = Image.open(scanned_file)
+                st.image(image, caption='Uploaded Scanned Document', use_column_width=True)
                 extracted_text = extract_text_from_image(image)
 
             if extracted_text:
@@ -100,10 +110,10 @@ def main():
                 st.write('New Data Extracted from Scanned Document:')
                 st.write(new_data_df)
 
-                if st.sidebar.button('Add Data from OCR'):
-                    st.session_state.df = pd.concat([st.session_state.df, new_data_df], ignore_index=True)
+                if st.sidebar.button('Match and Fill Data'):
+                    st.session_state.df = match_and_fill_data(new_data_df, st.session_state.df)
                     st.session_state.df = clean_data(st.session_state.df)
-                    st.sidebar.success('Data added successfully!')
+                    st.sidebar.success('Data matched and filled successfully!')
                     st.experimental_rerun()
 
         if st.button('Download Updated Data'):
